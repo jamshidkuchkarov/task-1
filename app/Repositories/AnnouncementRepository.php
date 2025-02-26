@@ -4,6 +4,7 @@ namespace App\Repositories;
 use App\Models\Announcement;
 use App\QueryFilter\AnnouncementFilter;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class AnnouncementRepository
 {
@@ -43,35 +44,47 @@ class AnnouncementRepository
         return $announcement;
     }
 
-    public function update($id, array $data): bool
+    public function update($id, array $data): Announcement|null
     {
         $announcement = Announcement::find($id);
 
         if (!$announcement) {
             return false;
         }
-        if ($this->request->hasFile('image')) {
-            if ($announcement->image) {
-                \Storage::disk('public')->delete($announcement->image);
-            }
 
-            $imagePath = $this->request->file('image')->store('announcements', 'public');
-            $data['image'] = $imagePath;
+        if (!empty($data['image'])) {
+            Storage::disk('public')->delete($announcement->image);
+            $data['image'] = $data['image']->store('announcements', 'public');
         }
 
         $announcement->update($data);
 
-        if (isset($data['attributes'])) {
+        if (!empty($data['attributes'])) {
+            $attributes = collect($data['attributes']);
+
+            foreach ($attributes as $attribute) {
+                $announcement->attributes()->updateOrCreate(
+                    ['key' => $attribute['key']],
+                    ['value' => $attribute['value']]
+                );
+            }
+
+            $announcement->attributes()
+                ->whereNotIn('key', $attributes->pluck('key'))
+                ->delete();
+        } else {
             $announcement->attributes()->delete();
-            $announcement->attributes()->createMany($data['attributes']);
         }
+
+
 
         if (isset($data['tags'])) {
             $announcement->tags()->sync($data['tags']);
         }
 
-        return true;
+        return $announcement->load(['attributes', 'tags']);
     }
+
 
 
     public function delete($id): bool

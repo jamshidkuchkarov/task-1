@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\AnnouncementRequest;
+use App\Http\Requests\AnnouncementUpdateRequest;
 use App\Http\Resources\AnnouncementCollection;
 use App\Http\Resources\AnnouncementResource;
 use App\Services\AnnouncementService;
@@ -37,10 +38,12 @@ class AnnouncementController extends Controller
         return ApiResponse::success(new AnnouncementResource($announcement), 'E’lon muvaffaqiyatli yaratildi', 201);
     }
 
-    public function update(AnnouncementRequest $request, $id): JsonResponse
+    public function update(AnnouncementUpdateRequest $request, $id): JsonResponse
     {
-        return $this->service->update($id, $request->validated())
-            ? ApiResponse::success([], 'E’lon muvaffaqiyatli yangilandi')
+        $announcement = $this->service->update($id, $request->validated());
+
+        return $announcement
+            ? ApiResponse::success(new AnnouncementResource($announcement), 'E’lon muvaffaqiyatli yangilandi')
             : ApiResponse::error('E’lon topilmadi', 404);
     }
 

@@ -27,7 +27,7 @@ class AnnouncementService
         return $this->repository->create($data);
     }
 
-    public function update($id, array $data): bool
+    public function update($id, array $data)
     {
         return $this->repository->update($id, $data);
     }

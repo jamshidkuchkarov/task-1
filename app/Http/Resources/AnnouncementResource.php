@@ -24,7 +24,7 @@ class AnnouncementResource extends JsonResource
             'image'       => $this->image ? asset('storage/' . $this->image) : null,
             'price'       => $this->price,
             'attributes'  => AnnouncementAttributeResource::collection($this->attributes),
-            'tags'        => $this->tags->pluck('name'),
+            'tags'        => TagResource::collection($this->tags),
             'created_at'  => $this->created_at->format('Y-m-d H:i:s'),
         ];
     }
